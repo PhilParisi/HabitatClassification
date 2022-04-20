@@ -1,65 +1,69 @@
 % Homomorphic filtering of images
+% Roman Project 2022
+% Phil Parisi
 
-% CLEAR AND LOAD NEW IMAGE
+%% CLEAR AND LOAD NEW IMAGE
 clc, clearvars, close all
 ex1_raw = imread("example_1.tiff");
-imshow(ex1_raw)
 
-%% MATLAB Tutorial 
-% https://blogs.mathworks.com/steve/2013/06/25/homomorphic-filtering-part-1/
+figure, imshow(ex1_raw)
+
+I = ex1_raw;
+
+I = im2double(I); % unit8 --> double values in range [0,1]
+figure, imshow(I)
+
+%% Homomorphic Filtering
 clc,  tic, close all, clearvars -except ex1_raw, format compact
-I = ex1_raw; % create local test copy
 
+I = ex1_raw;            % create local test copy
+image_array = {};       % define image array to hold homomorphic images
 
-sig = [1, 2, 3, 4, 5, 10, 20];
-%sig = 1;
-for i = 1:length(sig)
-    img = I;
-    
-    homomorph(I, sig(i));
-    
+% Loop over different sigma filter values and save homomorphed images
+sig = [0.5, 1, 2, 3, 4, 5, 10, 20, 35, 50];
+for i = 1:length(sig)    
+    image_array{i} = homomorph(I, sig(i),0);  
 end
+
 
 disp("...Finished!...")
 toc
 
+%% Thresholding Raw vs. Post-Morph
+clc, close all, format compact, clearvars -except ex1_raw
 
+% Threshold Raw Image
+ex1_thresh = 0.20;
+ex1_thresh = imbinarize(ex1_raw, ex1_thresh);
 
+% Homomorphic Filter & Side-by-Side Comparisons
+I = ex1_raw;            % create local test copy
+image_array = {};       % define image array to hold homomorphic images
 
+% Loop over different sigma filter values and save homomorphed images
+sig = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 20, 35, 50];
 
-function [no_out] = homomorph(I, sigma)
-disp("...new loop...")
-I = im2double(I);  % conver to floating point data type
-I = log(1 + I); % convert to log domain
+for i = 1:length(sig)    
 
-% Create a filter MxN
-M = 2*size(I,1) + 1;
-N = 2*size(I,2) + 1;
+    % Homomorphic filtering
+    image_array{i} = homomorph(I, sig(i),0);
 
-%sigma = 1; % std dev for gaussian which determines
-            % bandwidth of low-frequency band we will filter out
-            
-[X, Y] = meshgrid(1:N,1:M);
-centerX = ceil(N/2);
-centerY = ceil(M/2);
-gaussianNumerator = (X - centerX).^2 + (Y - centerY).^2;
-H = exp(-gaussianNumerator./(2*sigma.^2));
-H = 1 - H;
+    % Thresholding
+    img = image_array{i};
+    thresh_val = graythresh(img);
+    img_thresh = imbinarize(img,thresh_val);
 
-%figure
-%imshow(H,'InitialMagnification',25)
+    figure
+    subplot(2,1,1)
+    imshowpair(ex1_thresh, img_thresh, 'montage')
+    title('Raw Image w/ Thresh (left) vs. Homomorphed w/ Thresh (right)')
+    subplot(2,1,2)
+    imshowpair(ex1_raw, img, 'montage')
+    title(strcat("Raw Image (left) vs. Homomorphed w/ ",num2str(sig(i))," (right)"))
+    pause(1)
 
-H = fftshift(H);
-If = fft2(I, M, N);
-Iout = real(ifft2(H.*If));
-Iout = Iout(1:size(I,1),1:size(I,2));
-Ihmf = exp(Iout) - 1;
-
-figure
-imshowpair(I, Ihmf, 'montage')
-title(strcat("Sigma = ", num2str(sigma)))
-pause(1)
-
-no_out = 0;
 end
 
+
+disp("...Finished!...")
+toc
