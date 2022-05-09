@@ -1,5 +1,5 @@
 % FINAL CODE FOR BATCH PROCESSING IMAGES
-% Motsenbocker, Parisi, Runyan
+% B.Motsenbocker, P.Parisi, A.Runyan
 % April2022
 
 %%% HOW TO USE THIS SCRIPT (MUST READ)
@@ -7,12 +7,12 @@
 % Files Needed in Same Folder as Photos
 % -batchprocess_img.m (this/main script)
 % -homomorph.m
-% -all photos to analyze (.tiff extension)
+% -all photos to analyze (code set to handle .tiff)
 
 % Output will be
-% - habitat statistics
-% - new folder of edited photos
-%       - recommended to delete 'edited' folder before next run
+% - habitat statistics (outputted to command window and to .txt file)
+% - edited files, ending in _e.tiff
+%       - recommended to delete 'edited' files before next run (code to do so before)
 
 %%%% BEGIN SCRIPT
 clc, close all, clear all, format compact, tic
@@ -27,7 +27,7 @@ sigma = 1.0; % for homomorphic filter
 
 %%%% Gather Image FileNames
 % Note: you must be in the folder with the images
-imgNames = dir('*tiff');
+imgNames = dir('*tiff');        % set to grab all .tiff images
 imgNames = { imgNames.name };
 imgNames = string(imgNames);
 
@@ -48,37 +48,37 @@ for i = 8:8 %length(imgNames)
 
     %%% Convert to Grayscale
     img = rgb2gray(img);
-    figure, imshow(img)
+    %figure, imshow(img)
 
     %%% Apply Homomorphic Filter
     img = homomorph(img, sigma, 0);  
-    figure, imshow(img)
+    %figure, imshow(img)
 
     %%% Apply Multi-Threshold (2 thresholds, 3 bins)
     thresh = multithresh(img, 2);
     seg_img = imquantize(img, thresh);
     RGB = label2rgb(seg_img);
-    figure, imshow(RGB)
+    %figure, imshow(RGB)
     img = rgb2gray(RGB);
-    figure, imshow(img)
+    %figure, imshow(img)
 
     %%% Morphological Operations (closes and opens)
     % close
     SE = strel('rectangle',[15,9]);
     img = imclose(img,SE);
-    figure, imshow(img)
+    %figure, imshow(img)
     % open #1
     se = strel('rectangle', [18,15]);
     img = imopen(img, se);
-    figure, imshow(img)
+    %figure, imshow(img)
     % open #2
     se2 = strel('rectangle', [25,18]);
     img = imopen(img, se2);
-    figure, imshow(img)
+    %figure, imshow(img)
     % open #3
     se3 = strel('disk', 25);
     img = imopen(img, se3);
-    figure, imshow(img)
+    %figure, imshow(img)
 
     %%% Count Pixels for Habitat Statistics    
     total_pix = total_pix + (size(img,1) * size(img,2));
@@ -100,7 +100,7 @@ for i = 8:8 %length(imgNames)
     rawName = char(currentName);
     rawName = rawName(1:(length(rawName)-5));
     saveasName = strcat(pwd,'/',rawName,'_e.tiff');    
-    imwrite(img,saveasName)
+    imwrite(img,saveasName);
 
     %figure
     %imshowpair(imgraw,img,'montage')
