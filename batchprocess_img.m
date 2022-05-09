@@ -27,6 +27,7 @@ sigma = 1.0; % for homomorphic filter
 
 %%%% Gather Image FileNames
 % Note: you must be in the folder with the images
+% NEED TO UPDATE BASED ON YOUR FILE FOLDER! WHERE ARE IMAGES STORED?
 imgNames = dir('*tiff');        % set to grab all .tiff images
 imgNames = { imgNames.name };
 imgNames = string(imgNames);
